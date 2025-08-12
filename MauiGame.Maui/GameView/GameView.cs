@@ -107,7 +107,7 @@ public sealed partial class GameView : ContentView
 
     private void StartTimer()
     {
-        Dispatcher.StartTimer(TimeSpan.FromMilliseconds(16), () =>
+        Dispatcher.StartTimer(TimeSpan.FromSeconds(this.fixedDeltaSeconds), () =>
         {
             try
             {
