@@ -2,6 +2,7 @@
 using MauiGame.Core.Scenes;
 using MauiGame.Core.Time;
 using MauiGame.Maui.GameView;
+using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using System.Numerics;
 
@@ -10,11 +11,12 @@ namespace SampleGame.Game.Scenes;
 /// <summary>
 /// Very simple title scene: shows text, waits for Space/Tap to start gameplay.
 /// </summary>
-public sealed partial class TitleScene(IContent content, IAudio audio, IInput input) : Scene("Title")
+public sealed partial class TitleScene(IContent content, IAudio audio, IInput input, ILogger<TitleScene>? logger = null) : Scene("Title")
 {
     private readonly IContent content = content ?? throw new ArgumentNullException(nameof(content));
     private readonly IAudio audio = audio ?? throw new ArgumentNullException(nameof(audio));
     private readonly IInput input = input ?? throw new ArgumentNullException(nameof(input));
+    private readonly ILogger<TitleScene> logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<TitleScene>.Instance;
 
     private MauiGame.Core.Contracts.IFont? font;
     private IAudioClip? click;
@@ -48,8 +50,9 @@ public sealed partial class TitleScene(IContent content, IAudio audio, IInput in
                     instance.Dispose(); // fire-and-forget
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                this.logger.LogError(ex, "Failed to play click sound.");
             }
 
             // Signal to switch scene. Since IScene doesn't manage switching,
