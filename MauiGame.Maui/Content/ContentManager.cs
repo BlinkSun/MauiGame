@@ -1,5 +1,6 @@
-﻿using MauiGame.Core.Contracts;
+using MauiGame.Core.Contracts;
 using MauiGame.Maui.GameView;
+using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
 namespace MauiGame.Maui.Content;
@@ -10,10 +11,12 @@ namespace MauiGame.Maui.Content;
 public sealed partial class ContentManager : IContent
 {
     private readonly Dictionary<string, object> cache;
+    private readonly ILogger<ContentManager> logger;
 
     /// <summary>Create a new content manager.</summary>
-    public ContentManager()
+    public ContentManager(ILogger<ContentManager>? logger = null)
     {
+        this.logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<ContentManager>.Instance;
         this.cache = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
     }
 
@@ -37,8 +40,9 @@ public sealed partial class ContentManager : IContent
             this.cache[path] = texture;
             return texture;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            this.logger.LogError(ex, "Failed to load texture: {Path}", path);
             throw;
         }
     }
@@ -65,8 +69,9 @@ public sealed partial class ContentManager : IContent
             this.cache[path] = font;
             return font;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            this.logger.LogError(ex, "Failed to load font: {Path}", path);
             throw;
         }
     }
@@ -83,10 +88,12 @@ public sealed partial class ContentManager : IContent
                     d.Dispose();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                this.logger.LogError(ex, "Failed to dispose content '{Path}'.", kv.Key);
             }
         }
         this.cache.Clear();
     }
 }
+
