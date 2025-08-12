@@ -7,6 +7,8 @@ namespace MauiGame.Maui.Content;
 
 /// <summary>
 /// Loads textures and fonts from the MAUI packaged application assets.
+/// Caches loaded resources and returns shared instances on subsequent requests.
+/// The manager owns the cached resources and disposes them when <see cref="Dispose"/> is called.
 /// </summary>
 public sealed partial class ContentManager : IContent
 {
@@ -21,6 +23,7 @@ public sealed partial class ContentManager : IContent
     }
 
     /// <inheritdoc/>
+    /// <remarks>Returns a cached texture if available. Callers must not dispose the returned texture.</remarks>
     public async Task<ITexture> LoadTextureAsync(string path, CancellationToken cancellationToken)
     {
         try
@@ -48,6 +51,7 @@ public sealed partial class ContentManager : IContent
     }
 
     /// <inheritdoc/>
+    /// <remarks>Returns a cached font if available. Callers must not dispose the returned font.</remarks>
     public async Task<Core.Contracts.IFont> LoadFontAsync(string path, CancellationToken cancellationToken)
     {
         try
@@ -77,6 +81,7 @@ public sealed partial class ContentManager : IContent
     }
 
     /// <inheritdoc/>
+    /// <remarks>Disposes all cached resources and clears the cache.</remarks>
     public void Dispose()
     {
         foreach (KeyValuePair<string, object> kv in this.cache)
