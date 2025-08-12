@@ -14,16 +14,25 @@ public sealed partial class SkiaRenderer2D(SKCanvas canvas) : IRenderer2D, IDisp
     private readonly SKCanvas canvas = canvas ?? throw new ArgumentNullException(nameof(canvas));
     private bool began = false;
 
-    /// <inheritdoc/>
-    public void Begin(in Matrix3x2 transform)
+    /// <summary>
+    /// Begins a 2D batch with an optional camera transform and clear color.
+    /// </summary>
+    /// <param name="transform">Transform matrix applied to subsequent draw calls.</param>
+    /// <param name="clearColor">Optional color to clear the canvas with; if <c>null</c> no clear occurs.</param>
+    public void Begin(in Matrix3x2 transform, SKColor? clearColor = null)
     {
         if (this.began) throw new InvalidOperationException("Begin called twice.");
         this.began = true;
 
         this.canvas.Save();
         this.canvas.SetMatrix(ToSkMatrix(transform));
-        this.canvas.Clear(SKColors.Black);
+        if (clearColor.HasValue)
+        {
+            this.canvas.Clear(clearColor.Value);
+        }
     }
+
+    void IRenderer2D.Begin(in Matrix3x2 transform) => Begin(transform, null);
 
     /// <inheritdoc/>
     public void DrawSprite(ITexture texture, in Vector2 position, in Vector2 origin, in Vector2 scale, float rotationRadians, in RectangleF? sourceRect)

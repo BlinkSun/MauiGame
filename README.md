@@ -119,7 +119,7 @@ public sealed class MyGame : IGame
     {
         var skCtx = (SkiaDrawContext)context;
         using var renderer = new SkiaRenderer2D(skCtx.Canvas);
-        renderer.Begin(Matrix3x2.Identity);
+        renderer.Begin(Matrix3x2.Identity, SkiaSharp.SKColors.Black);
         renderer.DrawSprite(player, position, new Vector2(16, 16), Vector2.One, 0f, null);
         renderer.End();
     }

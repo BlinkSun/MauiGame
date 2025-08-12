@@ -2,6 +2,7 @@
 using MauiGame.Core.Scenes;
 using MauiGame.Core.Time;
 using MauiGame.Maui.GameView;
+using SkiaSharp;
 using System.Numerics;
 
 namespace SampleGame.Game.Scenes;
@@ -66,7 +67,7 @@ public sealed partial class TitleScene(IContent content, IAudio audio, IInput in
         using SkiaRenderer2D renderer = new(sk.Canvas);
 
         System.Numerics.Matrix3x2 camera = System.Numerics.Matrix3x2.Identity;
-        renderer.Begin(camera);
+        renderer.Begin(camera, SKColors.Black);
 
         if (this.font != null)
         {
