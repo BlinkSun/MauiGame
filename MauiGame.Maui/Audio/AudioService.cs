@@ -14,15 +14,34 @@ public sealed partial class AudioService(IAudioManager? manager = null, ILogger<
     private readonly ILogger<AudioService>? logger = logger;
 
     /// <inheritdoc/>
-    /// <remarks>The returned clip owns the stream and player created for the provided path.</remarks>
+    /// <remarks>The returned clip stores the audio data so a fresh player can be created per playback.</remarks>
     public async Task<IAudioClip> LoadClipAsync(string path, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("Path must be provided.", nameof(path));
 
-        Stream stream = await FileSystem.OpenAppPackageFileAsync(path).ConfigureAwait(false);
-        IAudioPlayer player = this.audioManager.CreatePlayer(stream);
-        // We keep the stream/player wrapped as a clip; duration best-effort
-        AudioClip clip = new(player, this.logger);
+        await using Stream stream = await FileSystem.OpenAppPackageFileAsync(path).ConfigureAwait(false);
+        using MemoryStream buffer = new MemoryStream();
+        await stream.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
+        byte[] data = buffer.ToArray();
+
+        double? duration = null;
+        MemoryStream durationStream = new MemoryStream(data, writable: false);
+        IAudioPlayer durationPlayer = this.audioManager.CreatePlayer(durationStream);
+        try
+        {
+            duration = durationPlayer.Duration;
+        }
+        catch (Exception ex)
+        {
+            this.logger?.LogError(ex, "Failed to get clip duration.");
+        }
+        finally
+        {
+            durationPlayer.Dispose();
+            durationStream.Dispose();
+        }
+
+        AudioClip clip = new AudioClip(data, duration, this.logger);
         return clip;
     }
 
@@ -33,7 +52,18 @@ public sealed partial class AudioService(IAudioManager? manager = null, ILogger<
         ArgumentNullException.ThrowIfNull(clip);
 
         AudioClip concrete = (AudioClip)clip;
-        AudioInstance instance = new(concrete.CreateNewPlayer(this.audioManager), this.logger)
+        IAudioPlayer player;
+        try
+        {
+            player = concrete.CreateNewPlayer(this.audioManager);
+        }
+        catch (Exception ex)
+        {
+            this.logger?.LogError(ex, "Failed to create audio player.");
+            throw;
+        }
+
+        AudioInstance instance = new AudioInstance(player, this.logger)
         {
             Volume = volume,
             Loop = loop
@@ -48,6 +78,8 @@ public sealed partial class AudioService(IAudioManager? manager = null, ILogger<
             catch (Exception ex)
             {
                 this.logger?.LogError(ex, "Failed to start audio instance.");
+                instance.Dispose();
+                throw;
             }
         }
 
@@ -61,46 +93,34 @@ public sealed partial class AudioService(IAudioManager? manager = null, ILogger<
     }
 
     /// <summary>
-    /// Wraps an <see cref="IAudioPlayer"/> created from a content stream.
-    /// The clip owns this player and its underlying stream; disposing the clip
-    /// releases both.
+    /// Represents audio data that can create new <see cref="IAudioPlayer"/> instances on demand.
     /// </summary>
-    private sealed partial class AudioClip(IAudioPlayer template, ILogger<AudioService>? logger) : IAudioClip
+    private sealed partial class AudioClip : IAudioClip
     {
-        private readonly IAudioPlayer template = template ?? throw new ArgumentNullException(nameof(template));
-        private readonly ILogger<AudioService>? logger = logger;
+        private readonly byte[] data;
+        private readonly double? durationSeconds;
+        private readonly ILogger<AudioService>? logger;
 
-        public double? DurationSeconds
+        public AudioClip(byte[] data, double? durationSeconds, ILogger<AudioService>? logger)
         {
-            get
-            {
-                try { return this.template.Duration; }
-                catch (Exception ex)
-                {
-                    this.logger?.LogError(ex, "Failed to get clip duration.");
-                    return null;
-                }
-            }
+            this.data = data ?? throw new ArgumentNullException(nameof(data));
+            this.durationSeconds = durationSeconds;
+            this.logger = logger;
         }
+
+        public double? DurationSeconds => this.durationSeconds;
 
         public IAudioPlayer CreateNewPlayer(IAudioManager manager)
         {
-            // There is no direct cloning; reopen underlying stream when playing
-            // Workaround: we assume the template still has its stream. For multiple instances,
-            // the caller should reopen streams; here we just reuse the same one (serial use).
-            return this.template;
+            ArgumentNullException.ThrowIfNull(manager);
+            MemoryStream stream = new MemoryStream(this.data, writable: false);
+            IAudioPlayer player = manager.CreatePlayer(stream);
+            return player;
         }
 
         public void Dispose()
         {
-            try
-            {
-                this.template.Dispose();
-            }
-            catch (Exception ex)
-            {
-                this.logger?.LogError(ex, "Error while disposing audio clip.");
-            }
+            // Nothing to dispose; clip only holds audio bytes.
         }
     }
 
