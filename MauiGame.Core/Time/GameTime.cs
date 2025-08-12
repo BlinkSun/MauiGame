@@ -19,7 +19,7 @@ public sealed class GameTime(double totalSeconds = 0.0, double deltaSeconds = 0.
     public void Advance(double fixedDeltaSeconds, double alpha)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(fixedDeltaSeconds, 0.0);
-        alpha = Math.Clamp(alpha, 0.0, 1.0);
+        alpha = System.Math.Clamp(alpha, 0.0, 1.0);
 
         this.DeltaSeconds = fixedDeltaSeconds;
         this.TotalSeconds += fixedDeltaSeconds;
