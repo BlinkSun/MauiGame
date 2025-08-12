@@ -4,6 +4,7 @@ using MauiGame.Maui.Content;
 using MauiGame.Maui.GameView;
 using MauiGame.Maui.Hosting;
 using MauiGame.Maui.Input;
+using Microsoft.Extensions.Logging;
 using SampleGame.Game;
 
 namespace SampleGame;
@@ -30,7 +31,8 @@ public partial class MainPage : ContentPage
 
         IGame game = new MyGame(content, audio, input);
 
-        GameView view = new(game, registry, 60.0);
+        ILogger<GameView> logger = LoggerFactory.Create(builder => builder.AddDebug()).CreateLogger<GameView>();
+        GameView view = new(game, logger, registry, 60.0);
         Content = view;
     }
 }
