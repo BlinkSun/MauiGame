@@ -47,7 +47,19 @@ public sealed partial class TitleScene(IContent content, IAudio audio, IInput in
                 if (this.click != null)
                 {
                     IAudioInstance instance = this.audio.Play(this.click, 1.0f, false, true);
-                    instance.Dispose(); // fire-and-forget
+                    double duration = this.click.DurationSeconds ?? 1.0;
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(duration)).ConfigureAwait(false);
+                            instance.Dispose();
+                        }
+                        catch (Exception disposeEx)
+                        {
+                            this.logger.LogError(disposeEx, "Failed to dispose click sound.");
+                        }
+                    });
                 }
             }
             catch (Exception ex)
