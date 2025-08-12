@@ -1,4 +1,6 @@
-﻿namespace MauiGame.Core.Utilities;
+using Microsoft.Extensions.Logging;
+
+namespace MauiGame.Core.Utilities;
 
 /// <summary>
 /// Helper that aggregates disposables and disposes them together.
@@ -6,12 +8,14 @@
 public sealed class DisposableCollection : IDisposable
 {
     private readonly List<IDisposable> items;
+    private readonly ILogger logger;
     private bool disposed;
 
     /// <summary>Creates an empty disposable collection.</summary>
-    public DisposableCollection()
+    public DisposableCollection(ILogger? logger = null)
     {
         this.items = [];
+        this.logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
         this.disposed = false;
     }
 
@@ -40,12 +44,13 @@ public sealed class DisposableCollection : IDisposable
             {
                 this.items[i].Dispose();
             }
-            catch
+            catch (Exception ex)
             {
-                // Intentionally swallow exceptions from Dispose.
+                this.logger.LogError(ex, "Error disposing item at index {Index}.", i);
             }
         }
 
         this.items.Clear();
     }
 }
+
