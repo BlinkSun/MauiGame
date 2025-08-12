@@ -55,7 +55,7 @@ public readonly struct KeyboardState
     }
 
     /// <summary>Returns whether the key is currently pressed.</summary>
-    public bool IsDown(Key key) => this.pressed != null && this.pressed.Contains(key);
+    public bool IsDown(Key key) => this.pressed.Contains(key);
 }
 
 /// <summary>Represents a snapshot of mouse/pointer state.</summary>
