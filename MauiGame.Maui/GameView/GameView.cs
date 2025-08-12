@@ -10,7 +10,7 @@ namespace MauiGame.Maui.GameView;
 /// <summary>
 /// A MAUI ContentView that hosts the game loop and a SkiaSharp SKGLView for rendering.
 /// </summary>
-public sealed partial class GameView : ContentView
+public sealed partial class GameView : ContentView, IDisposable
 {
 #if WINDOWS
     private readonly SKCanvasView view;
@@ -26,6 +26,7 @@ public sealed partial class GameView : ContentView
     private double accumulatorSeconds;
     private long lastTicks;
     private bool isRunning;
+    private bool disposed;
 
     /// <summary>Create a new GameView driven at a target FPS (default 60).</summary>
     /// <param name="game">Game instance to host.</param>
@@ -76,8 +77,8 @@ public sealed partial class GameView : ContentView
         // Keyboard is platform-specific; expose public methods for the page/window to forward events if available.
         this.Content = this.view;
 
-        this.Loaded += async (s, e) => await StartAsync().ConfigureAwait(false);
-        this.Unloaded += (s, e) => Stop();
+        this.Loaded += OnLoaded;
+        this.Unloaded += OnUnloaded;
     }
 
     /// <summary>Starts the loop and loads the game.</summary>
@@ -116,6 +117,46 @@ public sealed partial class GameView : ContentView
         {
             this.logger.LogWarning(ex, "Error while stopping stopwatch.");
         }
+    }
+
+    private async void OnLoaded(object? sender, EventArgs e)
+    {
+        try
+        {
+            await StartAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogError(ex, "Failed to load GameView.");
+        }
+    }
+
+    private void OnUnloaded(object? sender, EventArgs e)
+    {
+        Dispose();
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        if (this.disposed)
+        {
+            return;
+        }
+
+        this.disposed = true;
+
+        if (this.isRunning)
+        {
+            Stop();
+        }
+
+        this.view.Touch -= OnTouch;
+        this.Loaded -= OnLoaded;
+        this.Unloaded -= OnUnloaded;
+
+        this.host.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     private void StartTimer()
