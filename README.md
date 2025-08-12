@@ -1,6 +1,6 @@
 ﻿# MauiGame – Lightweight 2D Game Engine for .NET MAUI
 
-**MauiGame** is a cross-platform 2D game engine for **.NET MAUI**, inspired by MonoGame but designed for modern cross-platform apps with SkiaSharp rendering.
+**MauiGame** is a cross-platform 2D game engine for **.NET MAUI**, inspired by MonoGame but designed for modern cross-platform apps with **SkiaSharp** rendering.
 
 It runs on:
 - Android
@@ -19,6 +19,21 @@ It runs on:
 - 🖱 **Input system** supporting touch, mouse, and keyboard.
 - 🗂 **Scene management** for easy game state transitions.
 - 📜 **Cross-platform**: single codebase, runs everywhere MAUI runs.
+
+---
+
+## 🗺 Roadmap
+
+- [x] Basic rendering (sprites, text)
+- [x] Content loading (textures, fonts)
+- [x] Fixed timestep loop
+- [x] Input handling (multi-touch, keyboard)
+- [x] Audio playback
+- [x] Scene manager
+- [ ] Animation system (spritesheets)
+- [ ] Tilemap loader (Tiled JSON/TMX)
+- [ ] Particle system
+- [ ] Physics integration (Box2D/Chipmunk or custom)
 
 ---
 

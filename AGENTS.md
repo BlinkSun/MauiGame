@@ -1,7 +1,7 @@
 ﻿# AGENTS – Development Guidelines for MauiGame
 
-This document describes **how contributors and maintainers should work on MauiGame**.  
-It is intended as an internal playbook for architecture, coding style, and long-term maintenance.
+This document outlines how contributors and maintainers should work on **MauiGame**.
+It serves as an internal playbook for architecture, coding style, and long-term maintenance.
 
 ---
 
@@ -92,16 +92,24 @@ The project is split into 4 parts:
 
 ## 6. Roadmap
 
-- ⬜ Basic rendering (sprites, text)
-- ⬜ Content loading (textures, fonts)
-- ⬜ Fixed timestep loop
-- ⬜ Input handling (multi-touch, keyboard)
-- ⬜ Audio playback
-- ⬜ Scene manager
+- ✅ Basic rendering (sprites, text)
+- ✅ Content loading (textures, fonts)
+- ✅ Fixed timestep loop
+- ✅ Input handling (multi-touch, keyboard)
+- ✅ Audio playback
+- ✅ Scene manager
 - ⬜ Animation system (spritesheets)
 - ⬜ Tilemap loader (Tiled JSON/TMX)
 - ⬜ Particle system
 - ⬜ Physics integration (Box2D/Chipmunk or custom)
+
+---
+
+## 7. Development & Testing
+
+- Use the .NET 9 SDK.
+- Ensure the solution builds with `dotnet build`.
+- Run the `SampleGame` project for manual testing; automated tests are not yet available.
 
 ---
 
