@@ -161,63 +161,61 @@ public sealed class InputService : IInput
         }
     }
 
+    private static readonly Dictionary<KeyCodes, Core.Contracts.Key> KeyMap = new()
+    {
+        { KeyCodes.A, Core.Contracts.Key.A },
+        { KeyCodes.B, Core.Contracts.Key.B },
+        { KeyCodes.C, Core.Contracts.Key.C },
+        { KeyCodes.D, Core.Contracts.Key.D },
+        { KeyCodes.E, Core.Contracts.Key.E },
+        { KeyCodes.F, Core.Contracts.Key.F },
+        { KeyCodes.G, Core.Contracts.Key.G },
+        { KeyCodes.H, Core.Contracts.Key.H },
+        { KeyCodes.I, Core.Contracts.Key.I },
+        { KeyCodes.J, Core.Contracts.Key.J },
+        { KeyCodes.K, Core.Contracts.Key.K },
+        { KeyCodes.L, Core.Contracts.Key.L },
+        { KeyCodes.M, Core.Contracts.Key.M },
+        { KeyCodes.N, Core.Contracts.Key.N },
+        { KeyCodes.O, Core.Contracts.Key.O },
+        { KeyCodes.P, Core.Contracts.Key.P },
+        { KeyCodes.Q, Core.Contracts.Key.Q },
+        { KeyCodes.R, Core.Contracts.Key.R },
+        { KeyCodes.S, Core.Contracts.Key.S },
+        { KeyCodes.T, Core.Contracts.Key.T },
+        { KeyCodes.U, Core.Contracts.Key.U },
+        { KeyCodes.V, Core.Contracts.Key.V },
+        { KeyCodes.W, Core.Contracts.Key.W },
+        { KeyCodes.X, Core.Contracts.Key.X },
+        { KeyCodes.Y, Core.Contracts.Key.Y },
+        { KeyCodes.Z, Core.Contracts.Key.Z },
+        { KeyCodes.D0, Core.Contracts.Key.D0 },
+        { KeyCodes.D1, Core.Contracts.Key.D1 },
+        { KeyCodes.D2, Core.Contracts.Key.D2 },
+        { KeyCodes.D3, Core.Contracts.Key.D3 },
+        { KeyCodes.D4, Core.Contracts.Key.D4 },
+        { KeyCodes.D5, Core.Contracts.Key.D5 },
+        { KeyCodes.D6, Core.Contracts.Key.D6 },
+        { KeyCodes.D7, Core.Contracts.Key.D7 },
+        { KeyCodes.D8, Core.Contracts.Key.D8 },
+        { KeyCodes.D9, Core.Contracts.Key.D9 },
+        { KeyCodes.Left, Core.Contracts.Key.Left },
+        { KeyCodes.Right, Core.Contracts.Key.Right },
+        { KeyCodes.Up, Core.Contracts.Key.Up },
+        { KeyCodes.Down, Core.Contracts.Key.Down },
+        { KeyCodes.Space, Core.Contracts.Key.Space },
+        { KeyCodes.Enter, Core.Contracts.Key.Enter },
+        { KeyCodes.Escape, Core.Contracts.Key.Escape },
+        { KeyCodes.Shift, Core.Contracts.Key.Shift },
+        { KeyCodes.Control, Core.Contracts.Key.Control },
+        { KeyCodes.Alt, Core.Contracts.Key.Alt },
+        { KeyCodes.Tab, Core.Contracts.Key.Tab }
+    };
+
     private static Core.Contracts.Key MapKey(KeyCodes key)
     {
-        // Simple 1:1 mapping where names match
-        switch (key)
-        {
-            case KeyCodes.A: return Core.Contracts.Key.A;
-            case KeyCodes.B: return Core.Contracts.Key.B;
-            case KeyCodes.C: return Core.Contracts.Key.C;
-            case KeyCodes.D: return Core.Contracts.Key.D;
-            case KeyCodes.E: return Core.Contracts.Key.E;
-            case KeyCodes.F: return Core.Contracts.Key.F;
-            case KeyCodes.G: return Core.Contracts.Key.G;
-            case KeyCodes.H: return Core.Contracts.Key.H;
-            case KeyCodes.I: return Core.Contracts.Key.I;
-            case KeyCodes.J: return Core.Contracts.Key.J;
-            case KeyCodes.K: return Core.Contracts.Key.K;
-            case KeyCodes.L: return Core.Contracts.Key.L;
-            case KeyCodes.M: return Core.Contracts.Key.M;
-            case KeyCodes.N: return Core.Contracts.Key.N;
-            case KeyCodes.O: return Core.Contracts.Key.O;
-            case KeyCodes.P: return Core.Contracts.Key.P;
-            case KeyCodes.Q: return Core.Contracts.Key.Q;
-            case KeyCodes.R: return Core.Contracts.Key.R;
-            case KeyCodes.S: return Core.Contracts.Key.S;
-            case KeyCodes.T: return Core.Contracts.Key.T;
-            case KeyCodes.U: return Core.Contracts.Key.U;
-            case KeyCodes.V: return Core.Contracts.Key.V;
-            case KeyCodes.W: return Core.Contracts.Key.W;
-            case KeyCodes.X: return Core.Contracts.Key.X;
-            case KeyCodes.Y: return Core.Contracts.Key.Y;
-            case KeyCodes.Z: return Core.Contracts.Key.Z;
-
-            case KeyCodes.D0: return Core.Contracts.Key.D0;
-            case KeyCodes.D1: return Core.Contracts.Key.D1;
-            case KeyCodes.D2: return Core.Contracts.Key.D2;
-            case KeyCodes.D3: return Core.Contracts.Key.D3;
-            case KeyCodes.D4: return Core.Contracts.Key.D4;
-            case KeyCodes.D5: return Core.Contracts.Key.D5;
-            case KeyCodes.D6: return Core.Contracts.Key.D6;
-            case KeyCodes.D7: return Core.Contracts.Key.D7;
-            case KeyCodes.D8: return Core.Contracts.Key.D8;
-            case KeyCodes.D9: return Core.Contracts.Key.D9;
-
-            case KeyCodes.Left: return Core.Contracts.Key.Left;
-            case KeyCodes.Right: return Core.Contracts.Key.Right;
-            case KeyCodes.Up: return Core.Contracts.Key.Up;
-            case KeyCodes.Down: return Core.Contracts.Key.Down;
-
-            case KeyCodes.Space: return Core.Contracts.Key.Space;
-            case KeyCodes.Enter: return Core.Contracts.Key.Enter;
-            case KeyCodes.Escape: return Core.Contracts.Key.Escape;
-            case KeyCodes.Shift: return Core.Contracts.Key.Shift;
-            case KeyCodes.Control: return Core.Contracts.Key.Control;
-            case KeyCodes.Alt: return Core.Contracts.Key.Alt;
-            case KeyCodes.Tab: return Core.Contracts.Key.Tab;
-
-            default: return Core.Contracts.Key.Unknown;
-        }
+        return KeyMap.TryGetValue(key, out Core.Contracts.Key mapped)
+            ? mapped
+            : Core.Contracts.Key.Unknown;
     }
 }

@@ -22,6 +22,12 @@ public partial class MainPage : ContentPage
         ServiceRegistry registry = new();
 
         InputService input = new();
+#if DEBUG
+        input.HandleKeyDown(KeyCodes.A);
+        KeyboardState state = input.GetKeyboardState();
+        System.Diagnostics.Debug.Assert(state.IsDown(Key.A), "KeyCodes.A should map to Key.A");
+        input.HandleKeyUp(KeyCodes.A);
+#endif
         ContentManager content = new();
         AudioService audio = new();
 
