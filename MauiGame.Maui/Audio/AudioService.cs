@@ -14,6 +14,7 @@ public sealed partial class AudioService(IAudioManager? manager = null, ILogger<
     private readonly ILogger<AudioService>? logger = logger;
 
     /// <inheritdoc/>
+    /// <remarks>The returned clip owns the stream and player created for the provided path.</remarks>
     public async Task<IAudioClip> LoadClipAsync(string path, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("Path must be provided.", nameof(path));
@@ -26,6 +27,7 @@ public sealed partial class AudioService(IAudioManager? manager = null, ILogger<
     }
 
     /// <inheritdoc/>
+    /// <remarks>The caller is responsible for disposing the returned instance to release the player.</remarks>
     public IAudioInstance Play(IAudioClip clip, float volume = 1.0f, bool loop = false, bool autoStart = true)
     {
         ArgumentNullException.ThrowIfNull(clip);
@@ -58,6 +60,11 @@ public sealed partial class AudioService(IAudioManager? manager = null, ILogger<
         // Nothing to dispose; clip/instances own their players/streams.
     }
 
+    /// <summary>
+    /// Wraps an <see cref="IAudioPlayer"/> created from a content stream.
+    /// The clip owns this player and its underlying stream; disposing the clip
+    /// releases both.
+    /// </summary>
     private sealed partial class AudioClip(IAudioPlayer template, ILogger<AudioService>? logger) : IAudioClip
     {
         private readonly IAudioPlayer template = template ?? throw new ArgumentNullException(nameof(template));
@@ -97,6 +104,11 @@ public sealed partial class AudioService(IAudioManager? manager = null, ILogger<
         }
     }
 
+    /// <summary>
+    /// Represents a playing instance created from an <see cref="AudioClip"/>.
+    /// The instance owns its <see cref="IAudioPlayer"/> and disposes it when the
+    /// instance is disposed, stopping playback and freeing the stream.
+    /// </summary>
     private sealed partial class AudioInstance(IAudioPlayer player, ILogger<AudioService>? logger) : IAudioInstance
     {
         private readonly IAudioPlayer player = player ?? throw new ArgumentNullException(nameof(player));
