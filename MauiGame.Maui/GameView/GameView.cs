@@ -1,6 +1,7 @@
 ﻿using MauiGame.Core.Contracts;
 using MauiGame.Maui.Hosting;
 using MauiGame.Maui.Input;
+using Microsoft.Extensions.Logging;
 using SkiaSharp.Views.Maui.Controls;
 using System.Diagnostics;
 
@@ -20,18 +21,25 @@ public sealed partial class GameView : ContentView
     private readonly double fixedDeltaSeconds;
     private readonly GameHost host;
     private readonly InputService input;
+    private readonly ILogger<GameView> logger;
 
     private double accumulatorSeconds;
     private long lastTicks;
     private bool isRunning;
 
     /// <summary>Create a new GameView driven at a target FPS (default 60).</summary>
-    public GameView(IGame game, ServiceRegistry? services = null, double targetFps = 60.0)
+    /// <param name="game">Game instance to host.</param>
+    /// <param name="logger">Logger used for reporting errors and warnings.</param>
+    /// <param name="services">Optional registry for additional services.</param>
+    /// <param name="targetFps">Desired frames per second.</param>
+    public GameView(IGame game, ILogger<GameView> logger, ServiceRegistry? services = null, double targetFps = 60.0)
     {
         ArgumentNullException.ThrowIfNull(game);
+        ArgumentNullException.ThrowIfNull(logger);
 
         this.fixedDeltaSeconds = 1.0 / targetFps;
         this.stopwatch = new Stopwatch();
+        this.logger = logger;
 #if WINDOWS
         this.view = new SKCanvasView();
         this.view.PaintSurface += (s, e) =>
@@ -41,7 +49,10 @@ public sealed partial class GameView : ContentView
                 SkiaDrawContext ctx = new(e.Info.Width, e.Info.Height, e.Surface.Canvas);
                 this.host.Draw(ctx);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Error during paint surface.");
+            }
         };
 #else
         this.view = new SKGLView { EnableTouchEvents = true, HasRenderLoop = false };
@@ -88,7 +99,8 @@ public sealed partial class GameView : ContentView
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine(ex);
+            this.logger.LogError(ex, "Failed to start GameView.");
+            throw;
         }
     }
 
@@ -100,8 +112,9 @@ public sealed partial class GameView : ContentView
         {
             this.stopwatch.Stop();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            this.logger.LogWarning(ex, "Error while stopping stopwatch.");
         }
     }
 
@@ -135,7 +148,8 @@ public sealed partial class GameView : ContentView
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(ex);
+                this.logger.LogError(ex, "Unhandled exception in game loop iteration.");
+                return false;
             }
 
             return true;
@@ -151,7 +165,7 @@ public sealed partial class GameView : ContentView
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine(ex);
+            this.logger.LogError(ex, "Error during paint surface.");
         }
     }
 
@@ -162,8 +176,10 @@ public sealed partial class GameView : ContentView
             this.input.HandleTouch(e);
             e.Handled = true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            this.logger.LogError(ex, "Error handling touch event.");
+            e.Handled = false;
         }
     }
 
@@ -207,7 +223,15 @@ public sealed partial class GameView : ContentView
     /// </summary>
     public void ForwardKeyDown(KeyCodes key)
     {
-        try { this.input.HandleKeyDown(key); } catch (Exception) { }
+        try
+        {
+            this.input.HandleKeyDown(key);
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogError(ex, "Error forwarding key down.");
+            throw;
+        }
     }
 
     /// <summary>
@@ -215,6 +239,14 @@ public sealed partial class GameView : ContentView
     /// </summary>
     public void ForwardKeyUp(KeyCodes key)
     {
-        try { this.input.HandleKeyUp(key); } catch (Exception) { }
+        try
+        {
+            this.input.HandleKeyUp(key);
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogError(ex, "Error forwarding key up.");
+            throw;
+        }
     }
 }
