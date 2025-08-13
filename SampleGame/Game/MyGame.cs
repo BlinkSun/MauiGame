@@ -15,7 +15,7 @@ public sealed class MyGame : MauiGame.Core.Game
     /// <inheritdoc/>
     public override void Initialize()
     {
-        TitleScene title = new(this.Content, this.Audio, this.Input);
+        TitleScene title = new();
         title.OnStartRequested += async () =>
         {
             try { await StartGameplayAsync(CancellationToken.None).ConfigureAwait(false); } catch (Exception) { }
@@ -38,7 +38,7 @@ public sealed class MyGame : MauiGame.Core.Game
     /// <summary>Transitions from title to gameplay.</summary>
     public async Task StartGameplayAsync(CancellationToken cancellationToken)
     {
-        GameplayScene gameplay = new(this.Content, this.Audio, this.Input);
+        GameplayScene gameplay = new();
         this.Scenes.Replace(gameplay);
         await this.Scenes.EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
     }

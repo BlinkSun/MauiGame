@@ -1,4 +1,4 @@
-﻿using MauiGame.Core.Contracts;
+using MauiGame.Core.Contracts;
 using MauiGame.Core.Scenes;
 using MauiGame.Core.Time;
 using MauiGame.Maui.GameView;
@@ -11,11 +11,8 @@ namespace SampleGame.Game.Scenes;
 /// <summary>
 /// Very simple title scene: shows text, waits for Space/Tap to start gameplay.
 /// </summary>
-public sealed partial class TitleScene(IContent content, IAudio audio, IInput input, ILogger<TitleScene>? logger = null) : Scene("Title")
+public sealed partial class TitleScene(ILogger<TitleScene>? logger = null) : Scene("Title")
 {
-    private readonly IContent content = content ?? throw new ArgumentNullException(nameof(content));
-    private readonly IAudio audio = audio ?? throw new ArgumentNullException(nameof(audio));
-    private readonly IInput input = input ?? throw new ArgumentNullException(nameof(input));
     private readonly ILogger<TitleScene> logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<TitleScene>.Instance;
 
     private MauiGame.Core.Contracts.IFont? font;
@@ -26,8 +23,8 @@ public sealed partial class TitleScene(IContent content, IAudio audio, IInput in
     public override async Task LoadAsync(CancellationToken cancellationToken)
     {
         await base.LoadAsync(cancellationToken).ConfigureAwait(false);
-        this.font = await this.content.LoadFontAsync("Fonts/OpenSans-Regular.ttf", cancellationToken).ConfigureAwait(false);
-        this.click = await this.audio.LoadClipAsync("Audio/click.wav", cancellationToken).ConfigureAwait(false);
+        this.font = await this.Content.LoadFontAsync("Fonts/OpenSans-Regular.ttf", cancellationToken).ConfigureAwait(false);
+        this.click = await this.Audio.LoadClipAsync("Audio/click.wav", cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
@@ -36,8 +33,8 @@ public sealed partial class TitleScene(IContent content, IAudio audio, IInput in
         base.Update(time);
         this.blinkTimer += (float)time.DeltaSeconds;
 
-        KeyboardState ks = this.input.GetKeyboardState();
-        TouchState ts = this.input.GetTouchState();
+        KeyboardState ks = this.Input.GetKeyboardState();
+        TouchState ts = this.Input.GetTouchState();
 
         bool proceed = ks.IsDown(Key.Space) || ks.IsDown(Key.Enter) || ts.Touches.Count > 0;
         if (proceed)
@@ -46,7 +43,7 @@ public sealed partial class TitleScene(IContent content, IAudio audio, IInput in
             {
                 if (this.click != null)
                 {
-                    IAudioInstance instance = this.audio.Play(this.click, 1.0f, false, true);
+                    IAudioInstance instance = this.Audio.Play(this.click, 1.0f, false, true);
                     double duration = this.click.DurationSeconds ?? 1.0;
                     _ = Task.Run(async () =>
                     {
