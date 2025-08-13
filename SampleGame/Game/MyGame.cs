@@ -1,4 +1,3 @@
-using MauiGame.Core;
 using MauiGame.Core.Contracts;
 using SampleGame.Game.Scenes;
 
@@ -20,18 +19,19 @@ public sealed class MyGame : MauiGame.Core.Game
         {
             try { await StartGameplayAsync(CancellationToken.None).ConfigureAwait(false); } catch (Exception) { }
         };
-        this.Scenes.Push(title);
+        Scenes.Push(title);
+        
     }
 
     /// <inheritdoc/>
     public override async Task LoadAsync(CancellationToken cancellationToken)
     {
-        this.bgm = await this.Audio.LoadClipAsync("Audio/bgm_loop.mp3", cancellationToken).ConfigureAwait(false);
+        bgm = await Audio.LoadClipAsync("Audio/bgm_loop.mp3", cancellationToken).ConfigureAwait(false);
         await base.LoadAsync(cancellationToken).ConfigureAwait(false);
 
-        if (this.bgm != null)
+        if (bgm != null)
         {
-            this.bgmInstance = this.Audio.Play(this.bgm, volume: 0.5f, loop: true, autoStart: true);
+            bgmInstance = Audio.Play(bgm, volume: 0.5f, loop: true, autoStart: true);
         }
     }
 
@@ -39,8 +39,8 @@ public sealed class MyGame : MauiGame.Core.Game
     public async Task StartGameplayAsync(CancellationToken cancellationToken)
     {
         GameplayScene gameplay = new();
-        this.Scenes.Replace(gameplay);
-        await this.Scenes.EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+        Scenes.Replace(gameplay);
+        await Scenes.EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
     }
 }
 
