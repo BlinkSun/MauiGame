@@ -21,6 +21,9 @@ public abstract class Scene(string name) : IScene
     /// <summary>Input polling service available to the scene.</summary>
     protected IInput Input { get; private set; } = null!;
 
+    /// <summary>Scene manager available to the scene.</summary>
+    protected SceneManager SceneManager { get; private set; } = null!;
+
     /// <inheritdoc/>
     public string Name { get; } = name ?? throw new ArgumentNullException(nameof(name));
 
@@ -77,11 +80,13 @@ public abstract class Scene(string name) : IScene
     }
 
     /// <summary>Attaches engine services to the scene.</summary>
+    /// <param name="sceneManager">Scene manager controlling scene transitions.</param>
     /// <param name="content">Content loading service.</param>
     /// <param name="audio">Audio playback service.</param>
     /// <param name="input">Input polling service.</param>
-    internal void AttachServices(IContent content, IAudio audio, IInput input)
+    internal void AttachServices(SceneManager sceneManager, IContent content, IAudio audio, IInput input)
     {
+        SceneManager = sceneManager ?? throw new ArgumentNullException(nameof(sceneManager));
         Content = content ?? throw new ArgumentNullException(nameof(content));
         Audio = audio ?? throw new ArgumentNullException(nameof(audio));
         Input = input ?? throw new ArgumentNullException(nameof(input));
