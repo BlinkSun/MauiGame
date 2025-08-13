@@ -3,7 +3,6 @@ namespace MauiGame.Core;
 using MauiGame.Core.Contracts;
 using MauiGame.Core.Scenes;
 using MauiGame.Core.Time;
-using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Base game class providing access to core engine services and scene management.
@@ -13,8 +12,8 @@ public abstract class Game : IGame
     /// <summary>Initializes a new instance of the <see cref="Game"/> class.</summary>
     protected Game()
     {
-        this.Scenes = new SceneManager(logger: Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
-        this.Time = new GameTime();
+        Scenes = new SceneManager(logger: Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance);
+        Time = new GameTime();
     }
 
     /// <summary>Content loading service.</summary>
@@ -38,9 +37,9 @@ public abstract class Game : IGame
     /// <param name="input">Input polling service.</param>
     public void AttachServices(IContent content, IAudio audio, IInput input)
     {
-        this.Content = content ?? throw new ArgumentNullException(nameof(content));
-        this.Audio = audio ?? throw new ArgumentNullException(nameof(audio));
-        this.Input = input ?? throw new ArgumentNullException(nameof(input));
+        Content = content ?? throw new ArgumentNullException(nameof(content));
+        Audio = audio ?? throw new ArgumentNullException(nameof(audio));
+        Input = input ?? throw new ArgumentNullException(nameof(input));
     }
 
     /// <inheritdoc />
@@ -51,20 +50,20 @@ public abstract class Game : IGame
     /// <inheritdoc />
     public virtual async Task LoadAsync(CancellationToken cancellationToken)
     {
-        await this.Scenes.EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+        await Scenes.EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public virtual void Update(double deltaSeconds)
     {
-        this.Time.Advance(deltaSeconds, 0.0);
-        this.Scenes.Update(this.Time);
+        Time.Advance(deltaSeconds, 0.0);
+        Scenes.Update(Time);
     }
 
     /// <inheritdoc />
     public virtual void Draw(IDrawContext context)
     {
-        this.Scenes.Draw(context);
+        Scenes.Draw(context);
     }
 }
 

@@ -7,7 +7,7 @@ namespace SampleGame.Game;
 /// <summary>
 /// The game implementation that manages scenes and shared assets.
 /// </summary>
-public sealed class MyGame : Game
+public sealed class MyGame : MauiGame.Core.Game
 {
     private IAudioClip? bgm;
     private IAudioInstance? bgmInstance;
