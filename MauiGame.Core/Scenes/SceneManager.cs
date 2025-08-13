@@ -40,7 +40,7 @@ public sealed class SceneManager(ILogger? logger = null) : IDisposable
             {
                 throw new InvalidOperationException("Services have not been attached to the SceneManager.");
             }
-            typedScene.AttachServices(this.content, this.audio, this.input);
+            typedScene.AttachServices(this, this.content, this.audio, this.input);
         }
         this.stack.Push(scene);
         this.logger.LogInformation("Scene pushed: {Name}", scene.Name);

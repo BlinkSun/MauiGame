@@ -17,6 +17,8 @@ public sealed partial class TitleScene(ILogger<TitleScene>? logger = null) : Sce
 
     private MauiGame.Core.Contracts.IFont? font;
     private IAudioClip? click;
+    private IAudioClip? bgm;
+    private IAudioInstance? bgmInstance;
     private float blinkTimer = 0.0f;
 
     /// <inheritdoc/>
@@ -25,6 +27,12 @@ public sealed partial class TitleScene(ILogger<TitleScene>? logger = null) : Sce
         await base.LoadAsync(cancellationToken).ConfigureAwait(false);
         this.font = await this.Content.LoadFontAsync("Fonts/OpenSans-Regular.ttf", cancellationToken).ConfigureAwait(false);
         this.click = await this.Audio.LoadClipAsync("Audio/click.wav", cancellationToken).ConfigureAwait(false);
+        this.bgm = await this.Audio.LoadClipAsync("Audio/bgm_loop.mp3", cancellationToken).ConfigureAwait(false);
+
+        if (this.bgm != null)
+        {
+            this.bgmInstance = this.Audio.Play(this.bgm, 0.5f, true, true);
+        }
     }
 
     /// <inheritdoc/>
@@ -64,9 +72,8 @@ public sealed partial class TitleScene(ILogger<TitleScene>? logger = null) : Sce
                 this.logger.LogError(ex, "Failed to play click sound.");
             }
 
-            // Signal to switch scene. Since IScene doesn't manage switching,
-            // the MyGame class will replace the scene. Easiest is to raise an event or use a callback.
-            this.OnStartRequested?.Invoke();
+            this.SceneManager.Replace(new GameplayScene());
+            _ = this.SceneManager.EnsureLoadedAsync(CancellationToken.None);
         }
     }
 
@@ -93,6 +100,29 @@ public sealed partial class TitleScene(ILogger<TitleScene>? logger = null) : Sce
         renderer.End();
     }
 
-    /// <summary>Raised when player wants to start the game.</summary>
-    public event Action? OnStartRequested;
+    /// <inheritdoc/>
+    public override void Unload()
+    {
+        base.Unload();
+        try
+        {
+            this.bgmInstance?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogError(ex, "Failed to dispose background music instance.");
+        }
+
+        try
+        {
+            this.bgm?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogError(ex, "Failed to dispose background music clip.");
+        }
+
+        this.bgmInstance = null;
+        this.bgm = null;
+    }
 }
