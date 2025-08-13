@@ -1,44 +1,51 @@
 ﻿using MauiGame.Core.Contracts;
+using MauiGame.Maui.Audio;
+using MauiGame.Maui.Content;
 using MauiGame.Maui.Hosting;
 using MauiGame.Maui.Input;
 using Microsoft.Extensions.Logging;
 using SkiaSharp.Views.Maui.Controls;
+using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace MauiGame.Maui.GameView;
 
 /// <summary>
-/// A MAUI ContentView that hosts the game loop and a SkiaSharp SKGLView for rendering.
+/// A MAUI ContentPage that hosts the game loop and a SkiaSharp SKGLView for rendering.
 /// </summary>
-public sealed partial class GameView : ContentView, IDisposable
+public sealed partial class GamePage : ContentPage, IDisposable
 {
 #if WINDOWS
     private readonly SKCanvasView view;
-#else   
+#else
     private readonly SKGLView view;
 #endif
     private readonly Stopwatch stopwatch;
     private readonly double fixedDeltaSeconds;
     private readonly GameHost host;
     private readonly InputService input;
-    private readonly ILogger<GameView> logger;
+    private readonly ILogger<GamePage> logger;
 
     private double accumulatorSeconds;
     private long lastTicks;
     private bool isRunning;
     private bool disposed;
 
-    /// <summary>Create a new GameView driven at a target FPS (default 60).</summary>
-    /// <param name="game">Game instance to host.</param>
+    /// <summary>Create a new GamePage driven at the configured target FPS.</summary>
+    /// <param name="gameFactory">Factory used to create the game instance.</param>
     /// <param name="logger">Logger used for reporting errors and warnings.</param>
-    /// <param name="services">Optional registry for additional services.</param>
-    /// <param name="targetFps">Desired frames per second.</param>
-    public GameView(IGame game, ILogger<GameView> logger, ServiceRegistry? services = null, double targetFps = 60.0)
+    /// <param name="options">Engine configuration options.</param>
+    public GamePage(
+        Func<IContent, IAudio, IInput, IGame> gameFactory,
+        ILogger<GamePage> logger,
+        MauiGameOptions options)
     {
-        ArgumentNullException.ThrowIfNull(game);
+        ArgumentNullException.ThrowIfNull(gameFactory);
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(options);
 
-        this.fixedDeltaSeconds = 1.0 / targetFps;
+        this.fixedDeltaSeconds = 1.0 / options.TargetFps;
         this.stopwatch = new Stopwatch();
         this.logger = logger;
 #if WINDOWS
@@ -62,9 +69,14 @@ public sealed partial class GameView : ContentView, IDisposable
 
         // Services and host
         this.input = new InputService();
-        ServiceRegistry registry = services ?? new ServiceRegistry();
-        registry.TryAddService<IInput>(this.input);
+        ContentManager content = new();
+        AudioService audio = new();
+        ServiceRegistry registry = new();
+        registry.AddService<IInput>(this.input);
+        registry.AddService<IContent>(content);
+        registry.AddService<IAudio>(audio);
 
+        IGame game = gameFactory(content, audio, this.input);
         this.host = new GameHost(game, registry);
 
         // Wire up input
@@ -100,7 +112,7 @@ public sealed partial class GameView : ContentView, IDisposable
         }
         catch (Exception ex)
         {
-            this.logger.LogError(ex, "Failed to start GameView.");
+            this.logger.LogError(ex, "Failed to start GamePage.");
             throw;
         }
     }
@@ -127,7 +139,7 @@ public sealed partial class GameView : ContentView, IDisposable
         }
         catch (Exception ex)
         {
-            this.logger.LogError(ex, "Failed to load GameView.");
+            this.logger.LogError(ex, "Failed to load GamePage.");
         }
     }
 

@@ -74,7 +74,7 @@ Set **SampleGame** as the startup project and run it on your preferred platform 
 - Cross-platform logic
 
 ### MauiGame.Maui
-- `GameView` hosting SkiaSharp canvas
+- `GamePage` hosting SkiaSharp canvas
 - Skia renderer implementation
 - Input handling (touch, keyboard, mouse)
 - Audio service
