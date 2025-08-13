@@ -1,4 +1,4 @@
-﻿using MauiGame.Core.Contracts;
+using MauiGame.Core.Contracts;
 using MauiGame.Core.Time;
 
 namespace MauiGame.Core.Scenes;
@@ -11,6 +11,15 @@ namespace MauiGame.Core.Scenes;
 public abstract class Scene(string name) : IScene
 {
     private bool isLoaded = false;
+
+    /// <summary>Content loading service available to the scene.</summary>
+    protected IContent Content { get; private set; } = null!;
+
+    /// <summary>Audio playback service available to the scene.</summary>
+    protected IAudio Audio { get; private set; } = null!;
+
+    /// <summary>Input polling service available to the scene.</summary>
+    protected IInput Input { get; private set; } = null!;
 
     /// <inheritdoc/>
     public string Name { get; } = name ?? throw new ArgumentNullException(nameof(name));
@@ -65,6 +74,17 @@ public abstract class Scene(string name) : IScene
     public virtual void Unload()
     {
         this.isLoaded = false;
+    }
+
+    /// <summary>Attaches engine services to the scene.</summary>
+    /// <param name="content">Content loading service.</param>
+    /// <param name="audio">Audio playback service.</param>
+    /// <param name="input">Input polling service.</param>
+    internal void AttachServices(IContent content, IAudio audio, IInput input)
+    {
+        Content = content ?? throw new ArgumentNullException(nameof(content));
+        Audio = audio ?? throw new ArgumentNullException(nameof(audio));
+        Input = input ?? throw new ArgumentNullException(nameof(input));
     }
 
     /// <summary>Disposes the scene, calling <see cref="Unload"/> by default.</summary>

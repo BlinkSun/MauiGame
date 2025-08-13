@@ -40,6 +40,7 @@ public abstract class Game : IGame
         Content = content ?? throw new ArgumentNullException(nameof(content));
         Audio = audio ?? throw new ArgumentNullException(nameof(audio));
         Input = input ?? throw new ArgumentNullException(nameof(input));
+        Scenes.AttachServices(Content, Audio, Input);
     }
 
     /// <inheritdoc />

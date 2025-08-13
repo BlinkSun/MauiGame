@@ -1,4 +1,4 @@
-﻿using MauiGame.Core.Contracts;
+using MauiGame.Core.Contracts;
 using MauiGame.Core.Time;
 using Microsoft.Extensions.Logging;
 
@@ -12,14 +12,36 @@ public sealed class SceneManager(ILogger? logger = null) : IDisposable
 {
     private readonly Stack<IScene> stack = new();
     private readonly ILogger logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+    private IContent? content;
+    private IAudio? audio;
+    private IInput? input;
 
     /// <summary>Returns the scene on top of the stack, or null if none.</summary>
     public IScene? Current => this.stack.Count > 0 ? this.stack.Peek() : null;
+
+    /// <summary>Attaches engine services used to inject into scenes.</summary>
+    /// <param name="content">Content loading service.</param>
+    /// <param name="audio">Audio playback service.</param>
+    /// <param name="input">Input polling service.</param>
+    public void AttachServices(IContent content, IAudio audio, IInput input)
+    {
+        this.content = content ?? throw new ArgumentNullException(nameof(content));
+        this.audio = audio ?? throw new ArgumentNullException(nameof(audio));
+        this.input = input ?? throw new ArgumentNullException(nameof(input));
+    }
 
     /// <summary>Pushes a new scene on the stack (it becomes current).</summary>
     public void Push(IScene scene)
     {
         ArgumentNullException.ThrowIfNull(scene);
+        if (scene is Scene typedScene)
+        {
+            if (this.content == null || this.audio == null || this.input == null)
+            {
+                throw new InvalidOperationException("Services have not been attached to the SceneManager.");
+            }
+            typedScene.AttachServices(this.content, this.audio, this.input);
+        }
         this.stack.Push(scene);
         this.logger.LogInformation("Scene pushed: {Name}", scene.Name);
     }
