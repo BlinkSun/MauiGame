@@ -1,5 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
-using SkiaSharp.Views.Maui.Controls.Hosting;
+using Microsoft.Extensions.Logging;
+using MauiGame.Maui.Hosting;
+using SampleGame.Game;
 
 namespace SampleGame;
 
@@ -10,7 +11,7 @@ public static class MauiProgram
         MauiAppBuilder builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
-            .UseSkiaSharp()
+            .UseMauiGame<MyGame>(o => o.TargetFps = 60.0)
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -24,3 +25,4 @@ public static class MauiProgram
         return builder.Build();
     }
 }
+
