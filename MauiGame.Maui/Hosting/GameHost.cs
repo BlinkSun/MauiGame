@@ -1,4 +1,5 @@
-﻿using MauiGame.Core.Contracts;
+using MauiGame.Core;
+using MauiGame.Core.Contracts;
 using MauiGame.Core.Time;
 using MauiGame.Maui.Audio;
 using MauiGame.Maui.Content;
@@ -29,7 +30,6 @@ public sealed partial class GameHost : IDisposable
         this.time = new GameTime();
         this.InterpolationAlpha = 0.0;
 
-        // Ensure defaults
         if (this.services.TryGet<IContent>() == null)
         {
             this.services.AddService<IContent>(new ContentManager());
@@ -41,6 +41,14 @@ public sealed partial class GameHost : IDisposable
         if (this.services.TryGet<IInput>() == null)
         {
             this.services.AddService<IInput>(new InputService());
+        }
+
+        if (this.game is Game coreGame)
+        {
+            IContent content = this.services.Get<IContent>();
+            IAudio audio = this.services.Get<IAudio>();
+            IInput input = this.services.Get<IInput>();
+            coreGame.AttachServices(content, audio, input);
         }
     }
 
@@ -79,8 +87,6 @@ public sealed partial class GameHost : IDisposable
     {
         try
         {
-            // When using Skia backend, construct the per-frame renderer here if the game expects it,
-            // or the game can build its own renderer using the Skia canvas from context.
             this.game.Draw(context);
         }
         catch (Exception ex)
@@ -112,3 +118,4 @@ public sealed partial class GameHost : IDisposable
         }
     }
 }
+

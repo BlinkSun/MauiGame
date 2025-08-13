@@ -33,15 +33,15 @@ public sealed partial class GamePage : ContentPage, IDisposable
     private bool disposed;
 
     /// <summary>Create a new GamePage driven at the configured target FPS.</summary>
-    /// <param name="gameFactory">Factory used to create the game instance.</param>
+    /// <param name="game">Game instance to run.</param>
     /// <param name="logger">Logger used for reporting errors and warnings.</param>
     /// <param name="options">Engine configuration options.</param>
     public GamePage(
-        Func<IContent, IAudio, IInput, IGame> gameFactory,
+        IGame game,
         ILogger<GamePage> logger,
         MauiGameOptions options)
     {
-        ArgumentNullException.ThrowIfNull(gameFactory);
+        ArgumentNullException.ThrowIfNull(game);
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(options);
 
@@ -76,7 +76,6 @@ public sealed partial class GamePage : ContentPage, IDisposable
         registry.AddService<IContent>(content);
         registry.AddService<IAudio>(audio);
 
-        IGame game = gameFactory(content, audio, this.input);
         this.host = new GameHost(game, registry);
 
         // Wire up input

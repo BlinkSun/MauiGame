@@ -94,33 +94,35 @@ Set **SampleGame** as the startup project and run it on your preferred platform 
 ## 🛠 Example Usage
 
 ```csharp
-public sealed class MyGame : IGame
+public sealed class MyGame : Game
 {
     private ITexture player;
     private Vector2 position;
 
-    public void Initialize()
+    public override void Initialize()
     {
-        position = new Vector2(100, 100);
+        this.position = new Vector2(100, 100);
     }
 
-    public async Task LoadAsync(CancellationToken token)
+    public override async Task LoadAsync(CancellationToken token)
     {
-        var content = new ContentManager();
-        player = await content.LoadTextureAsync("Assets/player.png", token);
+        this.player = await this.Content.LoadTextureAsync("Assets/player.png", token);
+        await base.LoadAsync(token).ConfigureAwait(false);
     }
 
-    public void Update(double delta)
+    public override void Update(double delta)
     {
-        position.X += 50f * (float)delta;
+        base.Update(delta);
+        this.position.X += 50f * (float)delta;
     }
 
-    public void Draw(IDrawContext context)
+    public override void Draw(IDrawContext context)
     {
-        var skCtx = (SkiaDrawContext)context;
-        using var renderer = new SkiaRenderer2D(skCtx.Canvas);
+        base.Draw(context);
+        SkiaDrawContext skCtx = (SkiaDrawContext)context;
+        using SkiaRenderer2D renderer = new(skCtx.Canvas);
         renderer.Begin(Matrix3x2.Identity, SkiaSharp.SKColors.Black);
-        renderer.DrawSprite(player, position, new Vector2(16, 16), Vector2.One, 0f, null);
+        renderer.DrawSprite(this.player, this.position, new Vector2(16, 16), Vector2.One, 0f, null);
         renderer.End();
     }
 }

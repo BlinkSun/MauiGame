@@ -27,8 +27,7 @@ public static class MauiAppBuilderExtensions
         builder.UseSkiaSharp();
 
         builder.Services.AddSingleton(options);
-        builder.Services.AddSingleton<Func<IContent, IAudio, IInput, IGame>>(sp => (content, audio, input) =>
-            ActivatorUtilities.CreateInstance<TGame>(sp, content, audio, input));
+        builder.Services.AddSingleton<IGame>(sp => ActivatorUtilities.CreateInstance<TGame>(sp));
         builder.Services.AddSingleton<GamePage>();
 
         return builder;
