@@ -1,0 +1,29 @@
+<Project>
+  <PropertyGroup>
+    <!--
+      CLI fallback for environments where Visual Studio installs Android SDK/JDK
+      in a non-default location and ANDROID_SDK_ROOT / ANDROID_HOME are not set.
+      These values are only applied when the directories exist.
+    -->
+    <_VsAndroidSdkDir>E:\Apps\Microsoft Visual Studio\Shared\Android\android-sdk</_VsAndroidSdkDir>
+    <_VsJavaSdkDir>E:\Apps\Microsoft Visual Studio\Shared\Android\openjdk\jdk-21.0.8</_VsJavaSdkDir>
+    <_LegacyAndroidSdkDir>C:\Program Files (x86)\Android\android-sdk</_LegacyAndroidSdkDir>
+    <_LegacyJavaSdkDir>C:\Program Files (x86)\Android\openjdk\jdk-17.0.14</_LegacyJavaSdkDir>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(AndroidSdkDirectory)' == '' and Exists('$(_VsAndroidSdkDir)')">
+    <AndroidSdkDirectory>$(_VsAndroidSdkDir)</AndroidSdkDirectory>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(JavaSdkDirectory)' == '' and Exists('$(_VsJavaSdkDir)')">
+    <JavaSdkDirectory>$(_VsJavaSdkDir)</JavaSdkDirectory>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(AndroidSdkDirectory)' == '' and Exists('$(_LegacyAndroidSdkDir)')">
+    <AndroidSdkDirectory>$(_LegacyAndroidSdkDir)</AndroidSdkDirectory>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(JavaSdkDirectory)' == '' and Exists('$(_LegacyJavaSdkDir)')">
+    <JavaSdkDirectory>$(_LegacyJavaSdkDir)</JavaSdkDirectory>
+  </PropertyGroup>
+</Project>

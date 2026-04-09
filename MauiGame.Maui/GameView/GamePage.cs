@@ -8,6 +8,11 @@ using SkiaSharp.Views.Maui.Controls;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+#if WINDOWS
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Input;
+using Windows.System;
+#endif
 
 namespace MauiGame.Maui.GameView;
 
@@ -18,6 +23,7 @@ public sealed partial class GamePage : ContentPage, IDisposable
 {
 #if WINDOWS
     private readonly SKCanvasView view;
+    private FrameworkElement? windowsPlatformView;
 #else
     private readonly SKGLView view;
 #endif
@@ -49,13 +55,16 @@ public sealed partial class GamePage : ContentPage, IDisposable
         this.stopwatch = new Stopwatch();
         this.logger = logger;
 #if WINDOWS
-        this.view = new SKCanvasView();
+        this.view = new SKCanvasView
+        {
+            EnableTouchEvents = true
+        };
         this.view.PaintSurface += (s, e) =>
         {
             try
             {
                 SkiaDrawContext ctx = new(e.Info.Width, e.Info.Height, e.Surface.Canvas);
-                this.host.Draw(ctx);
+                this.host?.Draw(ctx);
             }
             catch (Exception ex)
             {
@@ -134,6 +143,9 @@ public sealed partial class GamePage : ContentPage, IDisposable
     {
         try
         {
+#if WINDOWS
+            EnsureWindowsInputHooks();
+#endif
             await StartAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -163,6 +175,10 @@ public sealed partial class GamePage : ContentPage, IDisposable
         }
 
         this.view.Touch -= OnTouch;
+#if WINDOWS
+        this.view.HandlerChanged -= OnViewHandlerChanged;
+        UnhookWindowsPlatformEvents();
+#endif
         this.Loaded -= OnLoaded;
         this.Unloaded -= OnUnloaded;
 
@@ -301,4 +317,127 @@ public sealed partial class GamePage : ContentPage, IDisposable
             throw;
         }
     }
+
+#if WINDOWS
+    private void EnsureWindowsInputHooks()
+    {
+        if (this.view.Handler?.PlatformView is FrameworkElement platformView)
+        {
+            HookWindowsPlatformEvents(platformView);
+            return;
+        }
+
+        this.view.HandlerChanged -= OnViewHandlerChanged;
+        this.view.HandlerChanged += OnViewHandlerChanged;
+    }
+
+    private void OnViewHandlerChanged(object? sender, EventArgs e)
+    {
+        if (this.view.Handler?.PlatformView is FrameworkElement platformView)
+        {
+            HookWindowsPlatformEvents(platformView);
+        }
+    }
+
+    private void HookWindowsPlatformEvents(FrameworkElement platformView)
+    {
+        if (ReferenceEquals(this.windowsPlatformView, platformView))
+        {
+            return;
+        }
+
+        UnhookWindowsPlatformEvents();
+
+        this.windowsPlatformView = platformView;
+        this.windowsPlatformView.KeyDown += OnWindowsKeyDown;
+        this.windowsPlatformView.KeyUp += OnWindowsKeyUp;
+        this.windowsPlatformView.IsTabStop = true;
+        this.windowsPlatformView.Focus(FocusState.Programmatic);
+    }
+
+    private void UnhookWindowsPlatformEvents()
+    {
+        if (this.windowsPlatformView == null)
+        {
+            return;
+        }
+
+        this.windowsPlatformView.KeyDown -= OnWindowsKeyDown;
+        this.windowsPlatformView.KeyUp -= OnWindowsKeyUp;
+        this.windowsPlatformView = null;
+    }
+
+    private void OnWindowsKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (TryMapVirtualKey(e.Key, out KeyCodes key))
+        {
+            this.input.HandleKeyDown(key);
+        }
+    }
+
+    private void OnWindowsKeyUp(object sender, KeyRoutedEventArgs e)
+    {
+        if (TryMapVirtualKey(e.Key, out KeyCodes key))
+        {
+            this.input.HandleKeyUp(key);
+        }
+    }
+
+    private static bool TryMapVirtualKey(VirtualKey key, out KeyCodes mapped)
+    {
+        mapped = key switch
+        {
+            VirtualKey.A => KeyCodes.A,
+            VirtualKey.B => KeyCodes.B,
+            VirtualKey.C => KeyCodes.C,
+            VirtualKey.D => KeyCodes.D,
+            VirtualKey.E => KeyCodes.E,
+            VirtualKey.F => KeyCodes.F,
+            VirtualKey.G => KeyCodes.G,
+            VirtualKey.H => KeyCodes.H,
+            VirtualKey.I => KeyCodes.I,
+            VirtualKey.J => KeyCodes.J,
+            VirtualKey.K => KeyCodes.K,
+            VirtualKey.L => KeyCodes.L,
+            VirtualKey.M => KeyCodes.M,
+            VirtualKey.N => KeyCodes.N,
+            VirtualKey.O => KeyCodes.O,
+            VirtualKey.P => KeyCodes.P,
+            VirtualKey.Q => KeyCodes.Q,
+            VirtualKey.R => KeyCodes.R,
+            VirtualKey.S => KeyCodes.S,
+            VirtualKey.T => KeyCodes.T,
+            VirtualKey.U => KeyCodes.U,
+            VirtualKey.V => KeyCodes.V,
+            VirtualKey.W => KeyCodes.W,
+            VirtualKey.X => KeyCodes.X,
+            VirtualKey.Y => KeyCodes.Y,
+            VirtualKey.Z => KeyCodes.Z,
+            VirtualKey.Number0 => KeyCodes.D0,
+            VirtualKey.Number1 => KeyCodes.D1,
+            VirtualKey.Number2 => KeyCodes.D2,
+            VirtualKey.Number3 => KeyCodes.D3,
+            VirtualKey.Number4 => KeyCodes.D4,
+            VirtualKey.Number5 => KeyCodes.D5,
+            VirtualKey.Number6 => KeyCodes.D6,
+            VirtualKey.Number7 => KeyCodes.D7,
+            VirtualKey.Number8 => KeyCodes.D8,
+            VirtualKey.Number9 => KeyCodes.D9,
+            VirtualKey.Left => KeyCodes.Left,
+            VirtualKey.Right => KeyCodes.Right,
+            VirtualKey.Up => KeyCodes.Up,
+            VirtualKey.Down => KeyCodes.Down,
+            VirtualKey.Space => KeyCodes.Space,
+            VirtualKey.Enter => KeyCodes.Enter,
+            VirtualKey.Escape => KeyCodes.Escape,
+            VirtualKey.Shift => KeyCodes.Shift,
+            VirtualKey.Control => KeyCodes.Control,
+            VirtualKey.Menu => KeyCodes.Alt,
+            VirtualKey.Tab => KeyCodes.Tab,
+            _ => KeyCodes.Unknown
+        };
+
+        return mapped != KeyCodes.Unknown;
+    }
+#endif
 }

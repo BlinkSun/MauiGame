@@ -107,7 +107,7 @@ The project is split into 4 parts:
 
 ## 7. Development & Testing
 
-- Use the .NET 9 SDK.
+- Use the .NET 10 SDK.
 - Ensure the solution builds with `dotnet build`.
 - Run the `SampleGame` project for manual testing; automated tests are not yet available.
 

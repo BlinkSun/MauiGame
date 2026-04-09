@@ -14,12 +14,14 @@ namespace SampleGame.Game.Scenes;
 public sealed partial class TitleScene(ILogger<TitleScene>? logger = null) : Scene("Title")
 {
     private readonly ILogger<TitleScene> logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<TitleScene>.Instance;
+    private readonly List<IAudioInstance> oneShots = [];
 
     private MauiGame.Core.Contracts.IFont? font;
     private IAudioClip? click;
     private IAudioClip? bgm;
     private IAudioInstance? bgmInstance;
     private float blinkTimer = 0.0f;
+    private bool transitionStarted;
 
     /// <inheritdoc/>
     public override async Task LoadAsync(CancellationToken cancellationToken)
@@ -40,31 +42,21 @@ public sealed partial class TitleScene(ILogger<TitleScene>? logger = null) : Sce
     {
         base.Update(time);
         this.blinkTimer += (float)time.DeltaSeconds;
+        CleanupOneShots();
 
         KeyboardState ks = this.Input.GetKeyboardState();
         TouchState ts = this.Input.GetTouchState();
 
         bool proceed = ks.IsDown(Key.Space) || ks.IsDown(Key.Enter) || ts.Touches.Count > 0;
-        if (proceed)
+        if (proceed && !this.transitionStarted)
         {
+            this.transitionStarted = true;
             try
             {
                 if (this.click != null)
                 {
                     IAudioInstance instance = this.Audio.Play(this.click, 1.0f, false, true);
-                    double duration = this.click.DurationSeconds ?? 1.0;
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await Task.Delay(TimeSpan.FromSeconds(duration)).ConfigureAwait(false);
-                            instance.Dispose();
-                        }
-                        catch (Exception disposeEx)
-                        {
-                            this.logger.LogError(disposeEx, "Failed to dispose click sound.");
-                        }
-                    });
+                    this.oneShots.Add(instance);
                 }
             }
             catch (Exception ex)
@@ -72,8 +64,16 @@ public sealed partial class TitleScene(ILogger<TitleScene>? logger = null) : Sce
                 this.logger.LogError(ex, "Failed to play click sound.");
             }
 
-            this.SceneManager.Replace(new GameplayScene());
-            _ = this.SceneManager.EnsureLoadedAsync(CancellationToken.None);
+            try
+            {
+                this.SceneManager.Replace(new GameplayScene());
+                this.SceneManager.EnsureLoadedAsync(CancellationToken.None).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Failed to transition to gameplay scene.");
+                this.transitionStarted = false;
+            }
         }
     }
 
@@ -104,6 +104,7 @@ public sealed partial class TitleScene(ILogger<TitleScene>? logger = null) : Sce
     public override void Unload()
     {
         base.Unload();
+        DisposeOneShots();
         try
         {
             this.bgmInstance?.Dispose();
@@ -124,5 +125,48 @@ public sealed partial class TitleScene(ILogger<TitleScene>? logger = null) : Sce
 
         this.bgmInstance = null;
         this.bgm = null;
+        this.transitionStarted = false;
+    }
+
+    private void CleanupOneShots()
+    {
+        for (int i = this.oneShots.Count - 1; i >= 0; i--)
+        {
+            IAudioInstance instance = this.oneShots[i];
+            if (instance.IsPlaying)
+            {
+                continue;
+            }
+
+            try
+            {
+                instance.Dispose();
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Failed to dispose one-shot audio instance.");
+            }
+            finally
+            {
+                this.oneShots.RemoveAt(i);
+            }
+        }
+    }
+
+    private void DisposeOneShots()
+    {
+        for (int i = this.oneShots.Count - 1; i >= 0; i--)
+        {
+            try
+            {
+                this.oneShots[i].Dispose();
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Failed to dispose one-shot audio instance on unload.");
+            }
+        }
+
+        this.oneShots.Clear();
     }
 }

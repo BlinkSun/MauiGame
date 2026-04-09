@@ -53,9 +53,10 @@ public sealed partial class AudioService(IAudioManager? manager = null, ILogger<
 
         AudioClip concrete = (AudioClip)clip;
         IAudioPlayer player;
+        MemoryStream stream;
         try
         {
-            player = concrete.CreateNewPlayer(this.audioManager);
+            (player, stream) = concrete.CreateNewPlayer(this.audioManager);
         }
         catch (Exception ex)
         {
@@ -63,7 +64,7 @@ public sealed partial class AudioService(IAudioManager? manager = null, ILogger<
             throw;
         }
 
-        AudioInstance instance = new AudioInstance(player, this.logger)
+        AudioInstance instance = new AudioInstance(player, stream, this.logger)
         {
             Volume = volume,
             Loop = loop
@@ -110,12 +111,12 @@ public sealed partial class AudioService(IAudioManager? manager = null, ILogger<
 
         public double? DurationSeconds => this.durationSeconds;
 
-        public IAudioPlayer CreateNewPlayer(IAudioManager manager)
+        public (IAudioPlayer Player, MemoryStream Stream) CreateNewPlayer(IAudioManager manager)
         {
             ArgumentNullException.ThrowIfNull(manager);
             MemoryStream stream = new MemoryStream(this.data, writable: false);
             IAudioPlayer player = manager.CreatePlayer(stream);
-            return player;
+            return (player, stream);
         }
 
         public void Dispose()
@@ -129,9 +130,10 @@ public sealed partial class AudioService(IAudioManager? manager = null, ILogger<
     /// The instance owns its <see cref="IAudioPlayer"/> and disposes it when the
     /// instance is disposed, stopping playback and freeing the stream.
     /// </summary>
-    private sealed partial class AudioInstance(IAudioPlayer player, ILogger<AudioService>? logger) : IAudioInstance
+    private sealed partial class AudioInstance(IAudioPlayer player, MemoryStream stream, ILogger<AudioService>? logger) : IAudioInstance
     {
         private readonly IAudioPlayer player = player ?? throw new ArgumentNullException(nameof(player));
+        private readonly MemoryStream stream = stream ?? throw new ArgumentNullException(nameof(stream));
         private readonly ILogger<AudioService>? logger = logger;
 
         public float Volume
@@ -234,6 +236,15 @@ public sealed partial class AudioService(IAudioManager? manager = null, ILogger<
             catch (Exception ex)
             {
                 this.logger?.LogError(ex, "Error while disposing audio instance.");
+            }
+
+            try
+            {
+                this.stream.Dispose();
+            }
+            catch (Exception ex)
+            {
+                this.logger?.LogError(ex, "Error while disposing audio stream.");
             }
         }
     }
